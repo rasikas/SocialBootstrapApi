@@ -29,7 +29,7 @@ namespace ServiceStack.ServiceInterface.Auth
         public override bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Auth request = null)
         {
             // TODO: For now...
-            return false;
+            return (System.Threading.Thread.CurrentPrincipal != null && System.Threading.Thread.CurrentPrincipal.Identity != null && System.Threading.Thread.CurrentPrincipal.Identity.IsAuthenticated);
         }
 
         public override object Authenticate(IServiceBase authService, IAuthSession session, Auth request)
@@ -92,8 +92,8 @@ namespace ServiceStack.ServiceInterface.Auth
 
             if (!request.ApplicationPath.EndsWith("/"))
                 wreply.Append("/");
-
-            wreply.Append("Federation/Federation.aspx");
+            //http://local.longscale.com/SocialBootstrapApi/api/auth/facebook
+            wreply.Append("api/auth/sts");
 
             return wreply.ToString();
        
