@@ -12,6 +12,8 @@ using System.Collections.Specialized;
 using Microsoft.IdentityModel.Claims;
 using ServiceStack.ServiceModel;
 using System.Net;
+using ServiceStack.Common;
+using ServiceStack.WebHost.Endpoints;
 
 namespace ServiceStack.ServiceInterface.Auth
 {
@@ -51,6 +53,36 @@ namespace ServiceStack.ServiceInterface.Auth
         {
             // TODO: For now...
             return (System.Threading.Thread.CurrentPrincipal != null && System.Threading.Thread.CurrentPrincipal.Identity != null && System.Threading.Thread.CurrentPrincipal.Identity.IsAuthenticated);
+        }
+
+        protected IOAuthTokens Init(IServiceBase authService, ref IAuthSession session, Auth request)
+        {
+            if (request != null && !LoginMatchesSession(session, request.UserName))
+            {
+                //authService.RemoveSession();
+                //session = authService.GetSession();
+            }
+
+            var requestUri = authService.RequestContext.AbsoluteUri;
+            if (this.CallbackUrl.IsNullOrEmpty())
+                this.CallbackUrl = requestUri;
+
+            if (session.ReferrerUrl.IsNullOrEmpty())
+                session.ReferrerUrl = (request != null ? request.Continue : null)
+                    ?? authService.RequestContext.GetHeader("Referer");
+            
+            //TODO: This section needs to be changed 
+            if (session.ReferrerUrl.IsNullOrEmpty()
+                || session.ReferrerUrl.IndexOf("/auth", StringComparison.OrdinalIgnoreCase) >= 0)
+                session.ReferrerUrl = this.RedirectUrl
+                    ?? ServiceStackHttpHandlerFactory.GetBaseUrl()
+                    ?? requestUri.Substring(0, requestUri.IndexOf("/", "https://".Length + 1, StringComparison.Ordinal));
+
+            var tokens = session.ProviderOAuthAccess.FirstOrDefault(x => x.Provider == Provider);
+            if (tokens == null)
+                session.ProviderOAuthAccess.Add(tokens = new OAuthTokens { Provider = Provider });
+
+            return tokens;
         }
 
         public override object Authenticate(IServiceBase authService, IAuthSession session, Auth request)
