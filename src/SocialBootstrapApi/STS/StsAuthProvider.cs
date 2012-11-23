@@ -22,11 +22,28 @@ namespace ServiceStack.ServiceInterface.Auth
 
         private IResourceManager appSettings;
 
+        private Dictionary<string, string> claimUri;
+
         public StsAuthProvider(IResourceManager appSettings)
             :base(appSettings, Realm, Name)
         {
             // TODO: Complete member initialization
             this.appSettings = appSettings;
+            claimUri = GetClaimTypeUris(appSettings);
+        }
+
+        private Dictionary<string, string> GetClaimTypeUris(IResourceManager appSettings)
+        {
+            var uris = new Dictionary<string, string>();
+            // TODO: We need to get these from config section for now just hard code...
+            uris.Add("id", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");   // As we don't send Id from STS, use email as id..
+            uris.Add("username", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name");
+            uris.Add("name", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name");
+            uris.Add("first_name", "http://cloudsts.longscale.com/claims/firstname");
+            uris.Add("last_name", "http://cloudsts.longscale.com/claims/lastname");
+            uris.Add("email", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+
+            return uris;
         }
 
 
@@ -170,11 +187,27 @@ namespace ServiceStack.ServiceInterface.Auth
 
         protected override void LoadUserAuthInfo(AuthUserSession userSession, IOAuthTokens tokens, Dictionary<string, string> authInfo)
         {
+            tokens.UserId = authInfo[claimUri["id"]];
+            tokens.UserName = authInfo[claimUri["username"]];
+            tokens.FirstName = authInfo[claimUri["first_name"]];
+            tokens.LastName = authInfo[claimUri["last_name"]];
+            tokens.Email = authInfo[claimUri["email"]];
+            tokens.DisplayName = !string.IsNullOrWhiteSpace(tokens.FirstName) && !string.IsNullOrWhiteSpace(tokens.LastName) ?
+                string.Format("{0} {1}", tokens.FirstName, tokens.LastName) : authInfo[claimUri["name"]];
 
-
-            base.LoadUserAuthInfo(userSession, tokens, authInfo);
+            LoadUserOAuthProvider(userSession, tokens);
+            
         }
 
+        public override void LoadUserOAuthProvider(IAuthSession authSession, IOAuthTokens tokens)
+        {
+            var userSession = authSession as AuthUserSession;
+            if (userSession == null) return;
 
+            userSession.DisplayName = tokens.DisplayName ?? userSession.DisplayName;
+            userSession.FirstName = tokens.FirstName ?? userSession.FirstName;
+            userSession.LastName = tokens.LastName ?? userSession.LastName;
+            userSession.PrimaryEmail = tokens.Email ?? userSession.PrimaryEmail ?? userSession.Email;
+        }
     }
 }
