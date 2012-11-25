@@ -24,30 +24,12 @@ namespace ServiceStack.ServiceInterface.Auth
 
         private IResourceManager appSettings;
 
-        private Dictionary<string, string> claimUri;
-
         public StsAuthProvider(IResourceManager appSettings)
             :base(appSettings, Realm, Name)
         {
             // TODO: Complete member initialization
             this.appSettings = appSettings;
-            claimUri = GetClaimTypeUris(appSettings);
         }
-
-        private Dictionary<string, string> GetClaimTypeUris(IResourceManager appSettings)
-        {
-            var uris = new Dictionary<string, string>();
-            // TODO: We need to get these from config section for now just hard code...
-            uris.Add("id", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");   // As we don't send Id from STS, use email as id..
-            uris.Add("username", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name");
-            uris.Add("name", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name");
-            uris.Add("first_name", "http://cloudsts.longscale.com/claims/firstname");
-            uris.Add("last_name", "http://cloudsts.longscale.com/claims/lastname");
-            uris.Add("email", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
-
-            return uris;
-        }
-
 
         public bool IsAuthorizedBySts(IAuthSession session, IOAuthTokens tokens, Auth request = null)
         {
@@ -219,13 +201,15 @@ namespace ServiceStack.ServiceInterface.Auth
 
         protected override void LoadUserAuthInfo(AuthUserSession userSession, IOAuthTokens tokens, Dictionary<string, string> authInfo)
         {
-            tokens.UserId = authInfo[claimUri["id"]];
-            tokens.UserName = authInfo[claimUri["username"]];
-            tokens.FirstName = authInfo[claimUri["first_name"]];
-            tokens.LastName = authInfo[claimUri["last_name"]];
-            tokens.Email = authInfo[claimUri["email"]];
+            var claims = StsConfigSection.Settings.Claims;
+
+            tokens.UserId = authInfo[claims["id"].ClaimUri];
+            tokens.UserName = authInfo[claims["username"].ClaimUri];
+            tokens.FirstName = authInfo[claims["first_name"].ClaimUri];
+            tokens.LastName = authInfo[claims["last_name"].ClaimUri];
+            tokens.Email = authInfo[claims["email"].ClaimUri];
             tokens.DisplayName = !string.IsNullOrWhiteSpace(tokens.FirstName) && !string.IsNullOrWhiteSpace(tokens.LastName) ?
-                string.Format("{0} {1}", tokens.FirstName, tokens.LastName) : authInfo[claimUri["name"]];
+                string.Format("{0} {1}", tokens.FirstName, tokens.LastName) : authInfo[claims["name"].ClaimUri];
 
             LoadUserOAuthProvider(userSession, tokens);
             
