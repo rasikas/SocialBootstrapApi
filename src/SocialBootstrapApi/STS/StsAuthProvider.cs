@@ -20,7 +20,7 @@ namespace ServiceStack.ServiceInterface.Auth
     public class StsAuthProvider : OAuthProvider
     {
         public const string Name = "sts";
-        public static string Realm = "https://marketplace.longscale.com/";
+        public static string Realm = "https://sts.longscale.com/";  //StsConfigSection.Settings.ProviderRealm; // "https://marketplace.longscale.com/";
 
         private IResourceManager appSettings;
 
@@ -159,12 +159,12 @@ namespace ServiceStack.ServiceInterface.Auth
 
             if (string.IsNullOrWhiteSpace(homeRealm))
             {
-                homeRealm = "http://cloudsts.longscale.com/trust"; // AppSTSSection.Instance.Issuer.Identifier;
+                homeRealm = StsConfigSection.Settings.Issuer.Identifier;  //"http://cloudsts.longscale.com/trust"; // AppSTSSection.Instance.Issuer.Identifier;
             }
 
-            if (homeRealm == "http://cloudsts.longscale.com/trust")
+            if (homeRealm == StsConfigSection.Settings.Issuer.Identifier) // "http://cloudsts.longscale.com/trust")
             {
-                issuer = "https://local.longscale.com/idsrv/issue/wsfed"; //AppSTSSection.Instance.Issuer.Location;
+                issuer = StsConfigSection.Settings.Issuer.Location; // "https://local.longscale.com/idsrv/issue/wsfed"; //AppSTSSection.Instance.Issuer.Location;
                 realm = FederatedAuthentication.WSFederationAuthenticationModule.Realm; //"https://marketplace.longscale.com/";
             }
             else
@@ -174,7 +174,7 @@ namespace ServiceStack.ServiceInterface.Auth
             }
 
             //var contextId = AppSTSSection.Instance.IssuerUri + "-" + Guid.NewGuid().ToString();
-            var contextId = "http://appsts.longscale.com/trust" + "-" + Guid.NewGuid().ToString();
+            var contextId = StsConfigSection.Settings.IssuerUri + "-" + Guid.NewGuid().ToString(); // "http://appsts.longscale.com/trust" + "-" + Guid.NewGuid().ToString();
 
             //this.CreateContextCookie(contextId, this.Request.Url.AbsoluteUri);
 
