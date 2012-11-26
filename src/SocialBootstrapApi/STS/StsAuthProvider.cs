@@ -76,6 +76,7 @@ namespace ServiceStack.ServiceInterface.Auth
 
             if (!isAuthenticated)
             {
+               authService.SaveSession(session, SessionExpiry);
                return  AuthenticateWithSTS(authService, session, request);
             }
 
