@@ -55,7 +55,10 @@ namespace SocialBootstrapApi.Models
                     user.YahooFullName = authToken.FullName;
                     user.YahooEmail = authToken.Email;
                 }
-
+                else if (authToken.Provider == StsAuthProvider.Name)
+                {
+                    user.StsUserName = authToken.UserName;
+                }
             }
 
             if (AppHost.Config.AdminUserNames.Contains(session.UserAuthName)

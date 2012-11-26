@@ -25,5 +25,8 @@ namespace SocialBootstrapApi.Models
         public string YahooFullName { get; set; }
         public string YahooEmail { get; set; }
         public string GravatarImageUrl64 { get; set; }
-	}
+
+        public string StsUserName { get; set; }
+
+    }
 }
