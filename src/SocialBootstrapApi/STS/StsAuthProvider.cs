@@ -37,6 +37,18 @@ namespace ServiceStack.ServiceInterface.Auth
             return (System.Threading.Thread.CurrentPrincipal != null && System.Threading.Thread.CurrentPrincipal.Identity != null && System.Threading.Thread.CurrentPrincipal.Identity.IsAuthenticated);
         }
 
+        public override object Logout(IServiceBase service, Auth request)
+        {
+            try
+            {
+                FederatedAuthentication.SessionAuthenticationModule.CookieHandler.Delete();
+                FederatedAuthentication.SessionAuthenticationModule.DeleteSessionTokenCookie();
+            }
+            catch (Exception ex) { }
+
+            return base.Logout(service, request);
+        }
+
         protected IOAuthTokens Init(IServiceBase authService, ref IAuthSession session, Auth request)
         {
             if (request != null && !LoginMatchesSession(session, request.UserName))
